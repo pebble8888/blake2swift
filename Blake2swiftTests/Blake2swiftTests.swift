@@ -17,7 +17,7 @@ class Blake2swiftTests: XCTestCase {
     override func tearDown() {
     }
 
-	// "abc"
+	// no key blake2b hash for "abc"
 	func test0() {
 		let calc = Blake2b.hash(data: [0x61, 0x62, 0x63])
 		print("\(calc.hexDescription())")
@@ -32,5 +32,78 @@ class Blake2swiftTests: XCTestCase {
 			XCTAssertEqual(calc[i], expected[i])
 		}
 	}
+	
+	// Deterministic sequences (Fibonacci generator).
+	
+	func selftest_seq(_ out: inout [UInt8], _ len: UInt32, _ seed: UInt32)
+    {
+		var t: UInt32
+		var a: UInt32
+		var b: UInt32
+     	a = 0xDEAD4BAD &* seed              // prime
+    	b = 1
+		// fill the buf
+    	for i in 0..<Int(len) {
+        	t = a &+ b
+        	a = b
+        	b = t
+        	out[i] = UInt8((t >> 24) & 0xFF)
+    	}
+	}
+	
+	// BLAKE2b self-test validation. Return 0 when OK.
+	func blake2b_selftest() -> Int {
+    	// grand hash of hash results
+		let blake2b_res: [UInt8] = [
+        	0xC2, 0x3A, 0x78, 0x00, 0xD9, 0x81, 0x23, 0xBD,
+        	0x10, 0xF5, 0x06, 0xC6, 0x1E, 0x29, 0xDA, 0x56,
+        	0x03, 0xD7, 0x63, 0xB8, 0xBB, 0xAD, 0x2E, 0x73,
+        	0x7F, 0x5E, 0x76, 0x5A, 0x7B, 0xCC, 0xD4, 0x75
+    	]
+    	// parameter sets
+		let b2b_md_len: [UInt32] = [ 20, 32, 48, 64 ]
+		let b2b_in_len: [UInt32] = [ 0, 3, 128, 129, 255, 1024 ]
+	
+		var outlen: UInt32
+		var inlen: UInt32
+		var in0: [UInt8] = [UInt8](repeating: 0, count: 1024)
+		var md: [UInt8] = [UInt8](repeating: 0, count: 64)
+		var key: [UInt8] = [UInt8](repeating: 0, count: 64)
+		var ctx = Blake2b.blake2b_ctx()
+    	// 256-bit hash for testing
+		if Blake2b.blake2b_init(&ctx, 32, [], 0) != 0 {
+        	return -1
+		}
+		for i in 0..<4 {
+        	outlen = b2b_md_len[i]
+			for j in 0..<6 {
+            	inlen = b2b_in_len[j]
+	
+				// unkeyed hash
+            	selftest_seq(&in0, inlen, inlen)
+				_ = Blake2b.blake2b(&md, UInt64(outlen), [], 0, in0, UInt64(inlen));
+				// hash the hash
+				Blake2b.blake2b_update(&ctx, md, UInt64(outlen));
 
+				// keyed hash
+				selftest_seq(&key, outlen, outlen)
+				_ = Blake2b.blake2b(&md, UInt64(outlen), key, UInt64(outlen), in0, UInt64(inlen))
+				Blake2b.blake2b_update(&ctx, md, UInt64(outlen));   // hash the hash
+        	}
+    	}
+	
+    	// compute and compare the hash of hashes
+    	Blake2b.blake2b_final(&ctx, &md)
+		for i in 0..<32 {
+			if md[i] != blake2b_res[i] {
+            	return -1
+			}
+    	}
+    	return 0
+	}
+	
+	func testSelfTest() {
+    	let result = blake2b_selftest()
+    	XCTAssertEqual(result, 0)
+	}
 }
