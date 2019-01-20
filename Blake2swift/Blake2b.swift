@@ -135,11 +135,11 @@ struct Blake2b
     //      1 <= outlen <= 64 gives the digest size in bytes.
     //      Secret key (also <= 64 bytes) is optional (keylen = 0).
 	// @note keylen=0: no key
-	static func blake2b_init(_ ctx: inout blake2b_ctx, _ outlen: UInt64, _ key:[UInt8], _ keylen: UInt64) -> Int
+	static func blake2b_init(_ ctx: inout blake2b_ctx, _ outlen: UInt64, _ key:[UInt8], _ keylen: UInt64) -> Bool
     {
     	if outlen == 0 || outlen > 64 || keylen > 64 {
 			// illegal parameters
-        	return -1
+        	return false
     	}
 		
 		// state, "param block"
@@ -153,14 +153,14 @@ struct Blake2b
     	ctx.c = 0                         // pointer within buffer
     	ctx.outlen = outlen
 
-    	for i in Int(keylen) ..<  128 {      // zero input block
+    	for i in Int(keylen) ..< 128 {      // zero input block
         	ctx.b[i] = 0
     	}
     	if keylen > 0 {
 			blake2b_update(&ctx, key, keylen)
     		ctx.c = 128                   // at the end
     	}
-    	return 0
+    	return true
     }
 
     // Add "inlen" bytes from "in" into the hash.
@@ -208,22 +208,23 @@ struct Blake2b
 	// @param keylen
 	// @param indata   : data to be hashed
 	// @param inlen
-	static func blake2b(_ outdata: inout [UInt8], _ outlen: UInt64, _ key: [UInt8], _ keylen: UInt64, _ indata: [UInt8], _ inlen: UInt64) -> Int
+	static func blake2b(_ outdata: inout [UInt8], _ outlen: UInt64, _ key: [UInt8], _ keylen: UInt64, _ indata: [UInt8], _ inlen: UInt64) -> Bool
     {
 		var ctx = blake2b_ctx()
-		if blake2b_init(&ctx, outlen, key, keylen) != 0 {
-    		return -1
+		if !blake2b_init(&ctx, outlen, key, keylen) {
+    		return false
 		}
 		blake2b_update(&ctx, indata, inlen)
     	blake2b_final(&ctx, &outdata)
-    	return 0
+    	return true
     }
 	
+	// @param data
 	// @return 64 byte
 	static func hash(data: [UInt8]) -> [UInt8]
 	{
 		var outdata = [UInt8](repeating: 0, count:64)
-		if blake2b(&outdata, 64, [], 0, data, UInt64(data.count)) != 0 {
+		if !blake2b(&outdata, 64, [], 0, data, UInt64(data.count))  {
 			return [UInt8](repeating: 0, count: 64)
 		}
 		return outdata

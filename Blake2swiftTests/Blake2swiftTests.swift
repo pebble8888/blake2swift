@@ -51,8 +51,9 @@ class Blake2swiftTests: XCTestCase {
     	}
 	}
 	
-	// BLAKE2b self-test validation. Return 0 when OK.
-	func blake2b_selftest() -> Int {
+	// BLAKE2b self-test validation. Return true when OK.
+	func blake2b_selftest() -> Bool
+	{
     	// grand hash of hash results
 		let blake2b_res: [UInt8] = [
         	0xC2, 0x3A, 0x78, 0x00, 0xD9, 0x81, 0x23, 0xBD,
@@ -71,8 +72,8 @@ class Blake2swiftTests: XCTestCase {
 		var key: [UInt8] = [UInt8](repeating: 0, count: 64)
 		var ctx = Blake2b.blake2b_ctx()
     	// 256-bit hash for testing
-		if Blake2b.blake2b_init(&ctx, 32, [], 0) != 0 {
-        	return -1
+		if !Blake2b.blake2b_init(&ctx, 32, [], 0) {
+        	return false
 		}
 		for i in 0..<4 {
         	outlen = b2b_md_len[i]
@@ -96,14 +97,14 @@ class Blake2swiftTests: XCTestCase {
     	Blake2b.blake2b_final(&ctx, &md)
 		for i in 0..<32 {
 			if md[i] != blake2b_res[i] {
-            	return -1
+            	return false
 			}
     	}
-    	return 0
+    	return true
 	}
 	
 	func testSelfTest() {
     	let result = blake2b_selftest()
-    	XCTAssertEqual(result, 0)
+    	XCTAssertEqual(result, true)
 	}
 }
