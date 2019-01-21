@@ -12,16 +12,16 @@ import Foundation
 struct Blake2b
 {
 	struct blake2b_ctx {
-		var b: [UInt8] // 128  input buffer
-		var h: [UInt64] // 8   chained state
-		var t: [UInt64] // 2   total number of bytes
-		var c: UInt64 // pointer for b[]
+		var buffer: [UInt8] // 128  input buffer
+		var chained_state: [UInt64] // 8   chained state
+		var total_size: [UInt64] // 2   total number of bytes
+		var buffer_index: UInt64 // pointer for buffer
 		var outlen:UInt64  // digest size
 		init() {
-			b = [UInt8](repeating: 0, count: 128)
-			h = [UInt64](repeating: 0, count: 8)
-			t = [UInt64](repeating: 0, count: 2)
-			c = 0
+			buffer = [UInt8](repeating: 0, count: 128)
+			chained_state = [UInt64](repeating: 0, count: 8)
+			total_size = [UInt64](repeating: 0, count: 2)
+			buffer_index = 0
 			outlen = 0
 		}
 	}
@@ -73,10 +73,8 @@ struct Blake2b
 
     // Initialization Vector.
     static let blake2b_iv:[UInt64] = [
-    	0x6A09E667F3BCC908, 0xBB67AE8584CAA73B,
-    	0x3C6EF372FE94F82B, 0xA54FF53A5F1D36F1,
-    	0x510E527FADE682D1, 0x9B05688C2B3E6C1F,
-    	0x1F83D9ABFB41BD6B, 0x5BE0CD19137E2179
+    	0x6A09E667F3BCC908, 0xBB67AE8584CAA73B, 0x3C6EF372FE94F82B, 0xA54FF53A5F1D36F1,
+    	0x510E527FADE682D1, 0x9B05688C2B3E6C1F, 0x1F83D9ABFB41BD6B, 0x5BE0CD19137E2179
     ]
 
     // Compression function. "last" flag indicates last block.
@@ -100,19 +98,20 @@ struct Blake2b
 		var v = [UInt64](repeating: 0, count: 16)
 		var m = [UInt64](repeating: 0, count: 16)
 		
-    	for i in 0..<8 {           // init work variables
-    		v[i] = ctx.h[i]
+		// init work variables
+    	for i in 0..<8 {
+    		v[i] = ctx.chained_state[i]
     		v[i + 8] = blake2b_iv[i]
     	}
 		
-    	v[12] ^= ctx.t[0]                 // low 64 bits of offset
-    	v[13] ^= ctx.t[1]                 // high 64 bits
+    	v[12] ^= ctx.total_size[0]                 // low 64 bits of offset
+    	v[13] ^= ctx.total_size[1]                 // high 64 bits
 		if last != 0 {                    // last block flag set ?
         	v[14] = ~v[14]
 		}
 		
 		for i in 0..<16 {           // get little-endian words
-			m[i] = B2B_GET64(ctx.b, index: 8 * i)
+			m[i] = B2B_GET64(ctx.buffer, index: 8 * i)
 		}
 		
     	for i in 0..<12 {          // twelve rounds
@@ -127,7 +126,7 @@ struct Blake2b
     	}
 	
 		for i in 0..<8 {
-        	ctx.h[i] ^= v[i] ^ v[i + 8]
+        	ctx.chained_state[i] ^= v[i] ^ v[i + 8]
 		}
     }
 
@@ -144,21 +143,32 @@ struct Blake2b
 		
 		// state, "param block"
 		for i in 0..<8 {
-    	    ctx.h[i] = blake2b_iv[i]
+    	    ctx.chained_state[i] = blake2b_iv[i]
     	}
-    	ctx.h[0] ^= 0x01010000 ^ (keylen << 8) ^ outlen
+    	ctx.chained_state[0] ^= ((0x01 << 24) | (0x01 << 16) | (keylen << 8) | outlen)
+		ctx.chained_state[1] ^= 0
+		ctx.chained_state[2] ^= 0		
+		ctx.chained_state[3] ^= 0		
+		ctx.chained_state[4] ^= 0		
+		ctx.chained_state[5] ^= 0		
+		ctx.chained_state[6] ^= 0		
+		ctx.chained_state[7] ^= 0		
 		
-    	ctx.t[0] = 0                      // input count low word
-    	ctx.t[1] = 0                      // input count high word
-    	ctx.c = 0                         // pointer within buffer
+		// input count low word		
+    	ctx.total_size[0] = 0 
+		// input count high word		
+    	ctx.total_size[1] = 0
+		// pointer within buffer		
+    	ctx.buffer_index = 0
     	ctx.outlen = outlen
 
     	for i in Int(keylen) ..< 128 {      // zero input block
-        	ctx.b[i] = 0
+        	ctx.buffer[i] = 0
     	}
     	if keylen > 0 {
 			blake2b_update(&ctx, key, keylen)
-    		ctx.c = 128                   // at the end
+			// at the end			
+    		ctx.buffer_index = 128
     	}
     	return true
     }
@@ -168,16 +178,16 @@ struct Blake2b
 	static func blake2b_update(_ ctx: inout blake2b_ctx, _ data: [UInt8], _ inlen: UInt64)
     {
     	for i in 0..<Int(inlen) {
-    		if ctx.c == 128 {            // buffer full ?
-    			ctx.t[0] += ctx.c        // add counters
-				if ctx.t[0] < ctx.c {     // carry overflow ?
-    			    ctx.t[1] += 1            // high word
+    		if ctx.buffer_index == 128 {            // buffer full ?
+    			ctx.total_size[0] += ctx.buffer_index        // add counters
+				if ctx.total_size[0] < ctx.buffer_index {     // carry overflow ?
+    			    ctx.total_size[1] += 1            // high word
 				}
     			blake2b_compress(&ctx, 0)   // compress (not last)
-    			ctx.c = 0                 // counter to zero
+    			ctx.buffer_index = 0                 // counter to zero
     		}
-    		ctx.b[Int(ctx.c)] = data[i]
-			ctx.c += 1
+    		ctx.buffer[Int(ctx.buffer_index)] = data[i]
+			ctx.buffer_index += 1
     	}
     }
 
@@ -185,20 +195,26 @@ struct Blake2b
     //      Result placed in "out".
 	static func blake2b_final(_ ctx: inout blake2b_ctx, _ outdata: inout [UInt8])
     {
-    	ctx.t[0] += ctx.c                // mark last block offset
-		if ctx.t[0] < ctx.c {             // carry overflow
-    		ctx.t[1] += 1                    // high word
+		// mark last block offset		
+    	ctx.total_size[0] += ctx.buffer_index
+		
+		// carry overflow		
+		if ctx.total_size[0] < ctx.buffer_index {
+			// high word			
+    		ctx.total_size[1] += 1
 		}
 		
-		while ctx.c < 128 {                // fill up with zeros
-    		ctx.b[Int(ctx.c)] = 0
-			ctx.c += 1
+		// fill up with zeros		
+		while ctx.buffer_index < 128 {
+    		ctx.buffer[Int(ctx.buffer_index)] = 0
+			ctx.buffer_index += 1
 		}
-    	blake2b_compress(&ctx, 1)           // final block flag = 1
+		// final block flag = 1		
+    	blake2b_compress(&ctx, 1)
 		
     	// little endian convert and store
     	for i in 0 ..< Int(ctx.outlen) {
-			outdata[i] = UInt8((ctx.h[i >> 3] >> (8 * (i & 7))) & 0xFF)
+			outdata[i] = UInt8((ctx.chained_state[i >> 3] >> (8 * (i & 7))) & 0xff)
     	}
     }
 

@@ -35,8 +35,9 @@ class Blake2swiftTests: XCTestCase {
 	
 	// Deterministic sequences (Fibonacci generator).
 	
-	func selftest_seq(_ out: inout [UInt8], _ len: UInt32, _ seed: UInt32)
+	static func selftest_seq(_ len: UInt32, _ seed: UInt32) -> [UInt8]
     {
+		var out = [UInt8](repeating: 0, count: Int(len))
 		var t: UInt32
 		var a: UInt32
 		var b: UInt32
@@ -49,6 +50,7 @@ class Blake2swiftTests: XCTestCase {
         	b = t
         	out[i] = UInt8((t >> 24) & 0xFF)
     	}
+		return out
 	}
 	
 	// BLAKE2b self-test validation. Return true when OK.
@@ -62,14 +64,12 @@ class Blake2swiftTests: XCTestCase {
         	0x7F, 0x5E, 0x76, 0x5A, 0x7B, 0xCC, 0xD4, 0x75
     	]
     	// parameter sets
-		let b2b_md_len: [UInt32] = [ 20, 32, 48, 64 ]
-		let b2b_in_len: [UInt32] = [ 0, 3, 128, 129, 255, 1024 ]
+		let b2b_md_len: [UInt32] = [ 20, 32, 48, 64 ] // outer 4 loop 
+		let b2b_in_len: [UInt32] = [ 0, 3, 128, 129, 255, 1024 ] // inner 6 loop 
 	
 		var outlen: UInt32
 		var inlen: UInt32
-		var in0: [UInt8] = [UInt8](repeating: 0, count: 1024)
 		var md: [UInt8] = [UInt8](repeating: 0, count: 64)
-		var key: [UInt8] = [UInt8](repeating: 0, count: 64)
 		var ctx = Blake2b.blake2b_ctx()
     	// 256-bit hash for testing
 		if !Blake2b.blake2b_init(&ctx, 32, [], 0) {
@@ -81,13 +81,13 @@ class Blake2swiftTests: XCTestCase {
             	inlen = b2b_in_len[j]
 	
 				// unkeyed hash
-            	selftest_seq(&in0, inlen, inlen)
+				let in0 = Blake2swiftTests.selftest_seq(inlen, inlen)
 				_ = Blake2b.blake2b(&md, UInt64(outlen), [], 0, in0, UInt64(inlen));
 				// hash the hash
 				Blake2b.blake2b_update(&ctx, md, UInt64(outlen));
 
 				// keyed hash
-				selftest_seq(&key, outlen, outlen)
+				let key = Blake2swiftTests.selftest_seq(outlen, outlen)
 				_ = Blake2b.blake2b(&md, UInt64(outlen), key, UInt64(outlen), in0, UInt64(inlen))
 				Blake2b.blake2b_update(&ctx, md, UInt64(outlen));   // hash the hash
         	}
