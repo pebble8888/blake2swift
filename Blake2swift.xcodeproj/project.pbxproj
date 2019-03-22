@@ -16,6 +16,8 @@
 		A29A765A21761FE800511869 /* Blake2swiftRefTests.m in Sources */ = {isa = PBXBuildFile; fileRef = A29A765921761FE800511869 /* Blake2swiftRefTests.m */; };
 		A29A765C21761FE800511869 /* Blake2swiftRef.h in Headers */ = {isa = PBXBuildFile; fileRef = A29A764E21761FE800511869 /* Blake2swiftRef.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		A29A76642176201200511869 /* Blake2swiftRef.c in Sources */ = {isa = PBXBuildFile; fileRef = A29A76632176201200511869 /* Blake2swiftRef.c */; };
+		A2B1D6AE21F49B7A00447900 /* Blake2bp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2B1D6AD21F49B7900447900 /* Blake2bp.swift */; };
+		A2B1D6B021F49BD800447900 /* Blake2bpTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2B1D6AF21F49BD800447900 /* Blake2bpTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -51,6 +53,8 @@
 		A29A765921761FE800511869 /* Blake2swiftRefTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = Blake2swiftRefTests.m; sourceTree = "<group>"; };
 		A29A765B21761FE800511869 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		A29A76632176201200511869 /* Blake2swiftRef.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = Blake2swiftRef.c; sourceTree = "<group>"; };
+		A2B1D6AD21F49B7900447900 /* Blake2bp.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Blake2bp.swift; sourceTree = "<group>"; };
+		A2B1D6AF21F49BD800447900 /* Blake2bpTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Blake2bpTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -112,6 +116,7 @@
 		A29A762B2173292A00511869 /* Blake2swift */ = {
 			isa = PBXGroup;
 			children = (
+				A2B1D6AD21F49B7900447900 /* Blake2bp.swift */,
 				A29A762C2173292A00511869 /* Blake2swift.h */,
 				A29A762D2173292A00511869 /* Info.plist */,
 				A29A76432173298400511869 /* Blake2b.swift */,
@@ -124,6 +129,7 @@
 			isa = PBXGroup;
 			children = (
 				A29A76372173292A00511869 /* Blake2swiftTests.swift */,
+				A2B1D6AF21F49BD800447900 /* Blake2bpTests.swift */,
 				A29A76392173292A00511869 /* Info.plist */,
 			);
 			path = Blake2swiftTests;
@@ -325,6 +331,7 @@
 			files = (
 				A29A764621737F0C00511869 /* Blake2bUtility.swift in Sources */,
 				A29A76442173298400511869 /* Blake2b.swift in Sources */,
+				A2B1D6AE21F49B7A00447900 /* Blake2bp.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -332,6 +339,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A2B1D6B021F49BD800447900 /* Blake2bpTests.swift in Sources */,
 				A29A76382173292A00511869 /* Blake2swiftTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

@@ -153,7 +153,6 @@ struct Blake2b
 		ctx.chained_state[5] ^= 0		
 		ctx.chained_state[6] ^= 0		
 		ctx.chained_state[7] ^= 0		
-		
 		// input count low word		
     	ctx.total_size[0] = 0 
 		// input count high word		
