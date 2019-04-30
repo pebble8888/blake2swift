@@ -260,10 +260,11 @@
 				TargetAttributes = {
 					A29A76282173292A00511869 = {
 						CreatedOnToolsVersion = 10.0;
-						LastSwiftMigration = 1000;
+						LastSwiftMigration = 1020;
 					};
 					A29A76312173292A00511869 = {
 						CreatedOnToolsVersion = 10.0;
+						LastSwiftMigration = 1020;
 					};
 					A29A764B21761FE800511869 = {
 						CreatedOnToolsVersion = 10.0;
@@ -279,6 +280,7 @@
 			hasScannedForEncodings = 0;
 			knownRegions = (
 				en,
+				Base,
 			);
 			mainGroup = A29A761F2173292A00511869;
 			productRefGroup = A29A762A2173292A00511869 /* Products */;
@@ -522,7 +524,7 @@
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
-				SWIFT_VERSION = 4.2;
+				SWIFT_VERSION = 5.0;
 			};
 			name = Debug;
 		};
@@ -548,7 +550,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.pebble8888.Blake2swift;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;
-				SWIFT_VERSION = 4.2;
+				SWIFT_VERSION = 5.0;
 			};
 			name = Release;
 		};
@@ -566,7 +568,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.pebble8888.Blake2swiftTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_VERSION = 4.2;
+				SWIFT_VERSION = 5.0;
 			};
 			name = Debug;
 		};
@@ -584,7 +586,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.pebble8888.Blake2swiftTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_VERSION = 4.2;
+				SWIFT_VERSION = 5.0;
 			};
 			name = Release;
 		};
